@@ -1,59 +1,285 @@
-# ExpenseTracker
+# 💰 ExpenseTracker
 
-Flutter expense tracking app with Firebase email/password authentication.
+A Flutter-based personal expense tracking application that helps users manage daily expenses, monitor monthly budgets, categorize transactions, and track spending history.
 
-## Firebase Authentication
+The application uses Firebase Authentication for secure user access and provides an intuitive interface for managing personal finances.
 
-The Android Firebase app is registered as `com.expensetracker.app`, matching
-the Android application ID. Its configuration is in
-`android/app/google-services.json`. `lib/firebase_options.dart` now initializes
-Firebase on Android, Windows, and Web from the existing project configuration,
-so no `--dart-define` values are required to launch:
+## 📱 Application Screenshots
 
-```powershell
-flutter run -d <android-device>
+Add your Android emulator screenshots in the `screenshots/` folder.
+
+| Transaction Logging | Budget Summary | Transaction History |
+|---|---|---|
+| ![Transaction Logging](screenshots/transaction_logging.png) | ![Budget Summary](screenshots/budget_summary.png) | ![Transaction History](screenshots/transaction_history.png) |
+| Add and record expenses | Monitor monthly spending | View previous transactions |
+
+## ✨ Key Features
+
+### 1. Transaction Management
+- Add daily expenses.
+- Enter transaction amount and description.
+- Select expense categories with icons.
+- Record transaction dates.
+- Edit existing transactions.
+- Delete unwanted transactions.
+
+### 2. Monthly Budget Summary
+- Display total monthly expenses.
+- Set a monthly spending budget.
+- Calculate remaining budget.
+- Display category-wise spending percentages.
+- Monitor spending progress.
+
+### 3. Transaction History
+- Display all recorded transactions.
+- Organize transactions chronologically.
+- Show transaction amount, category, and date.
+- Support editing and deleting transactions.
+
+### 4. Firebase Authentication
+- Email and password registration.
+- Secure login and logout.
+- Password reset.
+- Google sign-in.
+- Apple sign-in.
+- Facebook sign-in.
+- Microsoft sign-in.
+- Persistent authentication sessions.
+
+## 🛠️ Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Flutter | Cross-platform application development |
+| Dart | Programming language |
+| Firebase Authentication | User authentication |
+| Firebase Core | Firebase initialization |
+| Cloud Firestore / Local Storage | Transaction storage (depending on implementation) |
+| Material Design | User interface |
+
+## 📂 Data Schema
+
+The following is the recommended transaction data structure.
+
+### Transaction Schema
+
+| Field | Data Type | Description |
+|---|---|---|
+| id | String | Unique transaction ID |
+| userId | String | Authenticated user's UID |
+| amount | Double | Expense amount |
+| description | String | Transaction description |
+| category | String | Expense category |
+| date | DateTime | Transaction date |
+| createdAt | Timestamp | Record creation time |
+
+### Example Transaction
+
+```json
+{
+  "id": "transaction_001",
+  "userId": "firebase_user_uid",
+  "amount": 250.00,
+  "description": "Lunch",
+  "category": "Food",
+  "date": "2026-11-19",
+  "createdAt": "2026-11-19T10:30:00Z"
+}
 ```
 
-In Firebase Console, open **Authentication > Sign-in method** and enable
-**Email/Password**. For separate per-platform Firebase app registrations,
-authenticate the Firebase CLI and run `flutterfire configure` for Android,
-Windows, and Web; it will generate platform-specific options in
-`lib/firebase_options.dart`.
+### Budget Schema
 
-The login screen supports account creation, email/password sign-in, password
-reset, and Google, Apple, Facebook, and Microsoft sign-in. Firebase restores
-the signed-in session on launch; sign out from Settings. In Settings, a signed-in
-user can link an additional provider to the current Firebase UID.
+| Field | Data Type | Description |
+|---|---|---|
+| id | String | Unique budget ID |
+| userId | String | User UID |
+| monthlyBudget | Double | Monthly spending limit |
+| month | Integer | Budget month |
+| year | Integer | Budget year |
 
-## Social provider setup
+## 🧮 Budget Calculation Logic
 
-Social sign-in code is implemented, but provider operation depends on external
-OAuth configuration. The checked-in Firebase Android config currently has no
-OAuth client entries, and provider credentials cannot be verified from this
-workspace.
+The application calculates monthly spending using the user's recorded transactions.
 
-In the existing Firebase project (`expensetracking-1d98f`):
+**1. Total Monthly Expenses**
 
-1. In **Authentication > Sign-in method**, enable Google, Apple, Facebook, and
-   Microsoft. Keep Email/Password enabled. Add the deployed web domains under
-   **Settings > Authorized domains**.
-2. **Google:** finish the Google provider setup in Firebase. Register Android
-   SHA-1/SHA-256 fingerprints (debug and release), and ensure the OAuth client
-   matches `com.expensetracker.app`. Add the iOS OAuth client and its reversed
-   client ID URL scheme to `ios/Runner/Info.plist` if native iOS Google login
-   requires it. Web uses Firebase's popup flow and the existing `authDomain`.
-3. **Apple:** configure the Apple Developer App ID, Services ID, key and return
-   URL in the Apple Developer portal and Firebase. Add the Sign in with Apple
-   capability to the iOS Runner target and valid web domains/return URLs.
-4. **Facebook:** configure a Meta developer app and Facebook Login, set its App
-   ID/secret in Firebase, and add Firebase's OAuth redirect URI to the Meta app.
-   The native Facebook SDK also needs the app ID/client token and URL scheme in
-   Android/iOS platform configuration as described by `flutter_facebook_auth`.
-5. **Microsoft:** register an Azure app, configure its redirect URI and tenant
-   audience, then enter its client ID/secret in Firebase. Add any required
-   platform redirect scheme and Android signing fingerprint.
+```text
+Total Expenses = Sum of all transaction amounts
+                 within the selected month
+```
 
-Do not commit provider secrets. App IDs/client IDs are public identifiers;
-secrets belong only in provider consoles and Firebase. Android native Google
-login also requires the correct SHA fingerprints. Web OAuth popup flows need
-the authorized domain and provider redirect/callback URLs configured.
+**2. Remaining Budget**
+
+```text
+Remaining Budget = Monthly Budget - Total Expenses
+```
+
+**3. Category-wise Spending**
+
+```text
+Category Percentage =
+(Category Total / Total Monthly Expenses) × 100
+```
+
+**4. Budget Utilization**
+
+```text
+Budget Utilization =
+(Total Expenses / Monthly Budget) × 100
+```
+
+### Example Calculation
+
+Assume the monthly budget is ₹10,000.
+
+| Category | Amount |
+|---|---:|
+| Food | ₹2,000 |
+| Transport | ₹1,000 |
+| Shopping | ₹1,500 |
+| Entertainment | ₹500 |
+| Others | ₹1,000 |
+| **Total Expenses** | **₹6,000** |
+
+**Budget Summary:**
+
+- Monthly Budget: ₹10,000
+- Total Expenses: ₹6,000
+- Remaining Budget: ₹4,000
+- Budget Utilization: 60%
+
+## 🔥 Firebase Configuration
+
+The application uses Firebase Authentication.
+
+Firebase Project ID:
+
+```text
+expensetracking-1d98f
+```
+
+### Enable Authentication
+
+1. Open Firebase Console.
+2. Select the ExpenseTracker project.
+3. Navigate to Authentication.
+4. Open Sign-in method.
+5. Enable Email/Password authentication.
+6. Configure additional providers if required.
+
+### Supported Authentication Providers
+
+- Email/Password
+- Google
+- Apple
+- Facebook
+- Microsoft
+
+**Note:** Social authentication requires additional OAuth configuration in the respective provider consoles.
+
+### Firebase Android Configuration
+
+The Android application ID is:
+
+```text
+com.expensetracker.app
+```
+
+Configuration file:
+
+```text
+android/app/google-services.json
+```
+
+Firebase initialization:
+
+```text
+lib/firebase_options.dart
+```
+
+## 🚀 Installation and Setup
+
+### Prerequisites
+
+- Flutter SDK
+- Dart SDK
+- Android Studio
+- Visual Studio Code
+- Firebase account
+
+### Step 1: Clone Repository
+
+```bash
+git clone YOUR_GITHUB_REPOSITORY_URL
+```
+
+### Step 2: Navigate to Project
+
+```bash
+cd ExpenseTracker
+```
+
+### Step 3: Install Dependencies
+
+```bash
+flutter pub get
+```
+
+### Step 4: Configure Firebase
+
+Ensure the Firebase configuration files are available and correctly configured for your target platform.
+
+### Step 5: Run Application
+
+```bash
+flutter run
+```
+
+To run on a specific Android device:
+
+```bash
+flutter devices
+flutter run -d DEVICE_ID
+```
+
+## 📸 Adding Emulator Screenshots
+
+Create the following folder structure:
+
+```text
+ExpenseTracker/
+│
+├── screenshots/
+│   ├── transaction_logging.png
+│   ├── budget_summary.png
+│   └── transaction_history.png
+│
+├── android/
+├── lib/
+├── ios/
+├── web/
+├── pubspec.yaml
+└── README.md
+```
+
+Capture screenshots from your Android emulator and save them using the filenames shown above.
+
+## 🔮 Future Enhancements
+
+- Interactive expense analytics and charts.
+- Weekly and yearly spending reports.
+- Customizable expense categories.
+- Monthly budget notifications.
+- Export transactions as PDF or Excel.
+- Recurring expense management.
+- Cloud synchronization across devices.
+
+## 👩‍💻 Developer
+
+**Harini**
+
+B.Tech – Artificial Intelligence and Data Science
+
+---
+
+⭐ If you find this project useful, consider giving it a star!
