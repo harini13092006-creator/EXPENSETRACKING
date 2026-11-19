@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function owns(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function validProfile(uid) {
+      let data = request.resource.data;
+      return data.keys().hasOnly(['uid', 'name', 'fullName', 'email', 'photoUrl', 'currency', 'currencyCode', 'savingsTarget', 'savingsGoal', 'age', 'occupation', 'monthlyIncome', 'monthlyBudget', 'goal', 'primaryGoal', 'financialGoal', 'regularExpenses', 'categories', 'preferredCategories', 'onboardingCompleted', 'createdAt', 'updatedAt'])
+          && data.keys().hasAll(['uid', 'fullName', 'currencyCode', 'savingsGoal', 'createdAt', 'updatedAt'])
+          && data.uid == uid && data.fullName is string && data.fullName.size() <= 100
+          && data.currencyCode is string && data.currencyCode.matches('^[A-Z]{3}$')
+          && data.savingsGoal is number && data.savingsGoal >= 0 && data.savingsGoal <= 1000000000
+          && data.createdAt is timestamp
+          && data.updatedAt is timestamp
+          && (!('age' in data) || data.age == null || data.age is int && data.age >= 13 && data.age <= 120)
+          && (!('occupation' in data) || data.occupation is string && data.occupation.size() <= 100)
+          && (!('monthlyIncome' in data) || data.monthlyIncome is number && data.monthlyIncome >= 0 && data.monthlyIncome <= 1000000000)
+          && (!('monthlyBudget' in data) || data.monthlyBudget is number && data.monthlyBudget >= 0 && data.monthlyBudget <= 1000000000)
+          && (!('primaryGoal' in data) || data.primaryGoal is string && data.primaryGoal.size() <= 200)
+          && (!('financialGoal' in data) || data.financialGoal is string && data.financialGoal.size() <= 200)
+          && (!('regularExpenses' in data) || data.regularExpenses is string && data.regularExpenses.size() <= 1000)
+          && (!('preferredCategories' in data) || data.preferredCategories is list && data.preferredCategories.size() <= 30)
+          && (!('onboardingCompleted' in data) || data.onboardingCompleted is bool)
+          && (!('name' in data) || data.name is string && data.name.size() <= 100)
+          && (!('currency' in data) || data.currency is string && data.currency.matches('^[A-Z]{3}$'))
+          && (!('savingsTarget' in data) || data.savingsTarget is number && data.savingsTarget >= 0 && data.savingsTarget <= 1000000000)
+          && (!('goal' in data) || data.goal is string && data.goal.size() <= 200)
+          && (!('categories' in data) || data.categories is list && data.categories.size() <= 30)
+          && (!('email' in data) || data.email is string && data.email.size() <= 254)
+          && (!('photoUrl' in data) || data.photoUrl is string && data.photoUrl.size() <= 2048);
+    }
+    function validTransaction(data) {
+      return data.keys().hasOnly(['type', 'amount', 'description', 'categoryId', 'categoryName', 'date', 'paymentMethod', 'note', 'createdAt', 'updatedAt'])
+          && data.keys().hasAll(['type', 'amount', 'description', 'categoryId', 'date', 'paymentMethod', 'createdAt', 'updatedAt'])
+          && data.type in ['expense', 'income'] && data.amount is number && data.amount > 0 && data.amount <= 1000000000
+          && data.description is string && data.description.size() >= 1 && data.description.size() <= 200
+          && data.categoryId is string && data.categoryId.size() >= 1 && data.categoryId.size() <= 100
+          && (!('categoryName' in data) || data.categoryName is string && data.categoryName.size() <= 60)
+          && data.date is timestamp && data.paymentMethod is string && data.paymentMethod.size() <= 40
+          && (!('note' in data) || data.note is string && data.note.size() <= 1000)
+          && data.createdAt is timestamp && data.updatedAt is timestamp;
+    }
+    function validCategory(data) {
+      return data.keys().hasOnly(['name', 'type', 'iconCodePoint', 'colorValue', 'monthlyBudget', 'isDefault', 'createdAt', 'updatedAt'])
+          && data.keys().hasAll(['name', 'type', 'iconCodePoint', 'colorValue', 'monthlyBudget', 'isDefault', 'createdAt', 'updatedAt'])
+          && data.name is string && data.name.size() >= 1 && data.name.size() <= 60
+          && data.type in ['expense', 'income'] && data.iconCodePoint is int && data.iconCodePoint >= 0
+          && data.colorValue is int && data.monthlyBudget is number && data.monthlyBudget >= 0
+          && data.isDefault is bool && data.createdAt is timestamp && data.updatedAt is timestamp;
+    }
+    function validBudget(data) {
+      return data.keys().hasOnly(['month', 'year', 'amount', 'createdAt', 'updatedAt'])
+          && data.keys().hasAll(['month', 'year', 'amount', 'createdAt', 'updatedAt'])
+          && data.month is int && data.month >= 1 && data.month <= 12
+          && data.year is int && data.year >= 2000 && data.year <= 2200
+          && data.amount is number && data.amount >= 0 && data.amount <= 1000000000
+          && data.createdAt is timestamp
+          && data.updatedAt is timestamp;
+    }
+    function validSettings(data) {
+      return data.keys().hasOnly(['currencyCode', 'themeMode', 'notificationsEnabled', 'createdAt', 'updatedAt'])
+          && data.keys().hasAll(['currencyCode', 'themeMode', 'notificationsEnabled', 'createdAt', 'updatedAt'])
+          && data.currencyCode is string && data.currencyCode.matches('^[A-Z]{3}$')
+          && data.themeMode in ['system', 'light', 'dark'] && data.notificationsEnabled is bool
+          && data.createdAt is timestamp && data.updatedAt is timestamp;
+    }
+
+    match /users/{uid} {
+      allow get: if owns(uid);
+      allow list: if false;
+      allow create: if owns(uid) && validProfile(uid);
+      allow update: if owns(uid) && validProfile(uid)
+          && (!('createdAt' in resource.data)
+              || !(resource.data.createdAt is timestamp)
+              || request.resource.data.createdAt == resource.data.createdAt);
+      allow delete: if owns(uid);
+
+      match /transactions/{transactionId} {
+        allow read: if owns(uid);
+        allow create: if owns(uid) && validTransaction(request.resource.data);
+        allow update: if owns(uid) && validTransaction(request.resource.data)
+            && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if owns(uid);
+      }
+      match /categories/{categoryId} {
+        allow read: if owns(uid);
+        allow create: if owns(uid) && validCategory(request.resource.data);
+        allow update: if owns(uid) && validCategory(request.resource.data)
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.isDefault == resource.data.isDefault;
+        allow delete: if owns(uid);
+      }
+      match /budgets/{budgetId} {
+        allow read: if owns(uid);
+        allow create: if owns(uid) && validBudget(request.resource.data);
+        allow update: if owns(uid) && validBudget(request.resource.data)
+            && (!('createdAt' in resource.data)
+                || !(resource.data.createdAt is timestamp)
+                || request.resource.data.createdAt == resource.data.createdAt);
+        allow delete: if owns(uid);
+      }
+      match /settings/{settingId} {
+        allow read: if owns(uid);
+        allow create: if owns(uid) && validSettings(request.resource.data);
+        allow update: if owns(uid) && validSettings(request.resource.data)
+            && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if owns(uid);
+      }
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
