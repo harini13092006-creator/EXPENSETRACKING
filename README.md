@@ -10,7 +10,7 @@ Add your Android emulator screenshots in the `screenshots/` folder.
 
 | Transaction Logging | Budget Summary | Transaction History |
 |---|---|---|
-| ![Transaction Logging](screenshots/transaction_logging.png) | ![Budget Summary](screenshots/budget_summary.png) | ![Transaction History](screenshots/transaction_history.png) |
+| ![Transaction Logging](screenshots/screenshot1.jpeg) | ![Budget Summary](screenshots/screenshot2.jpeg) | ![Transaction History](screenshots/screenshot3.jpeg) |![Manage spending](screenshots/screenshot4.jpeg) |![Goals](screenshots/screenshot5.jpeg) |![Transaction History](screenshots/screenshot6.jpeg) |
 | Add and record expenses | Monitor monthly spending | View previous transactions |
 
 ## ✨ Key Features
